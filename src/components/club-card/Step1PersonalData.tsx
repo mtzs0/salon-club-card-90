@@ -125,16 +125,16 @@ export const Step1PersonalData = ({
 
   const handleSimulate = () => {
     const testData: PersonalDataForm = {
-      firstName: "Teszt",
-      lastName: "Felhasználó",
-      birthYear: "1990",
-      birthMonth: "06",
-      birthDay: "15",
-      email: "teszt@email.com",
-      phone: "+36 30 123 4567",
+      firstName: "Zsolt",
+      lastName: "Márcsev",
+      birthYear: "1996",
+      birthMonth: "07",
+      birthDay: "26",
+      email: "marcsevzsolt@gmail.com",
+      phone: "+36 70 278 1122",
       acceptedPrivacy: true,
     };
-    onNext(testData);
+    onFormChange(testData);
   };
 
   const formatPhoneNumber = (value: string): string => {
