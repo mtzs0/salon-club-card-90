@@ -22,7 +22,7 @@ export const StepIndicator = ({
   const isCompleted = (stepNumber: number) => completedSteps.includes(stepNumber);
   const isActive = (stepNumber: number) => stepNumber === currentStep;
   const isClickable = (stepNumber: number) => 
-    isCompleted(stepNumber) || stepNumber < currentStep;
+    currentStep !== 3 && (isCompleted(stepNumber) || stepNumber < currentStep);
 
   return (
     <div className="flex items-center justify-center w-full px-4 py-6">
