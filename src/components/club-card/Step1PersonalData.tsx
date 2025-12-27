@@ -185,7 +185,7 @@ export const Step1PersonalData = ({
                 onFormChange({ ...formData, firstName: e.target.value })
               }
               className={errors.firstName ? "border-destructive" : ""}
-              placeholder="János"
+              placeholder=""
             />
             {errors.firstName && (
               <p className="text-xs text-destructive">{errors.firstName}</p>
@@ -202,7 +202,7 @@ export const Step1PersonalData = ({
                 onFormChange({ ...formData, lastName: e.target.value })
               }
               className={errors.lastName ? "border-destructive" : ""}
-              placeholder="Kovács"
+              placeholder=""
             />
             {errors.lastName && (
               <p className="text-xs text-destructive">{errors.lastName}</p>
@@ -284,7 +284,7 @@ export const Step1PersonalData = ({
               onFormChange({ ...formData, email: e.target.value })
             }
             className={errors.email ? "border-destructive" : ""}
-            placeholder="pelda@email.com"
+            placeholder=""
           />
           {errors.email && (
             <p className="text-xs text-destructive">{errors.email}</p>
