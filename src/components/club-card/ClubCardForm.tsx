@@ -61,12 +61,6 @@ export const ClubCardForm = () => {
   const handleStep1Complete = useCallback(async (overrideData?: PersonalDataForm) => {
     const dataToUse = overrideData || formData;
     
-    // Generate UUID and vendeg_id
-    const uuid = generateUUID();
-    const id = generateVendegId(uuid, dataToUse.lastName);
-    setVendegUuid(uuid);
-    setVendegId(id);
-
     // If using override data, also update the form state
     if (overrideData) {
       setFormData(overrideData);
@@ -75,26 +69,67 @@ export const ClubCardForm = () => {
     setIsSubmitting(true);
 
     try {
-      // Insert data into Supabase
-      const { error } = await supabase
+      // Check if email already exists in database
+      const { data: existingClient } = await supabase
         .from("clients")
-        .insert({
-          vendeg_uuid: uuid,
-          vendeg_id: id,
-          vendeg_first_name: dataToUse.firstName,
-          vendeg_last_name: dataToUse.lastName,
-          vendeg_birthday: `${dataToUse.birthYear}-${dataToUse.birthMonth}-${dataToUse.birthDay.padStart(2, "0")}`,
-          vendeg_email: dataToUse.email,
-          vendeg_telefon: dataToUse.phone,
-          payment_status: false,
-        });
+        .select("vendeg_uuid, vendeg_id")
+        .eq("vendeg_email", dataToUse.email)
+        .maybeSingle();
 
-      if (error) {
-        console.error("Supabase insert error:", error);
-        toast.error("Hiba történt az adatok mentése során. Kérjük, próbálja újra.");
-        setIsSubmitting(false);
-        return;
+      let uuid: string;
+      let id: string;
+
+      if (existingClient) {
+        // Email exists - update the existing record
+        uuid = existingClient.vendeg_uuid;
+        id = existingClient.vendeg_id;
+
+        const { error } = await supabase
+          .from("clients")
+          .update({
+            vendeg_first_name: dataToUse.firstName,
+            vendeg_last_name: dataToUse.lastName,
+            vendeg_birthday: `${dataToUse.birthYear}-${dataToUse.birthMonth}-${dataToUse.birthDay.padStart(2, "0")}`,
+            vendeg_telefon: dataToUse.phone,
+          })
+          .eq("vendeg_uuid", uuid);
+
+        if (error) {
+          console.error("Supabase update error:", error);
+          toast.error("Hiba történt az adatok mentése során. Kérjük, próbálja újra.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        toast.success("Meglévő adatok frissítve!");
+      } else {
+        // Email doesn't exist - create new record
+        uuid = generateUUID();
+        id = generateVendegId(uuid, dataToUse.lastName);
+
+        const { error } = await supabase
+          .from("clients")
+          .insert({
+            vendeg_uuid: uuid,
+            vendeg_id: id,
+            vendeg_first_name: dataToUse.firstName,
+            vendeg_last_name: dataToUse.lastName,
+            vendeg_birthday: `${dataToUse.birthYear}-${dataToUse.birthMonth}-${dataToUse.birthDay.padStart(2, "0")}`,
+            vendeg_email: dataToUse.email,
+            vendeg_telefon: dataToUse.phone,
+            payment_status: false,
+          });
+
+        if (error) {
+          console.error("Supabase insert error:", error);
+          toast.error("Hiba történt az adatok mentése során. Kérjük, próbálja újra.");
+          setIsSubmitting(false);
+          return;
+        }
       }
+
+      setVendegUuid(uuid);
+      setVendegId(id);
 
       // Mark step 1 as completed and move to step 2
       setCompletedSteps((prev) => [...prev.filter((s) => s !== 1), 1]);
