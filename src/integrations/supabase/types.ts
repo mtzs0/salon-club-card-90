@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          created_at: string
+          membership_end: string | null
+          membership_start: string | null
+          payment_date: string | null
+          payment_status: boolean
+          updated_at: string
+          vendeg_birthday: string
+          vendeg_email: string
+          vendeg_first_name: string
+          vendeg_id: string
+          vendeg_last_name: string
+          vendeg_telefon: string
+          vendeg_uuid: string
+        }
+        Insert: {
+          created_at?: string
+          membership_end?: string | null
+          membership_start?: string | null
+          payment_date?: string | null
+          payment_status?: boolean
+          updated_at?: string
+          vendeg_birthday: string
+          vendeg_email: string
+          vendeg_first_name: string
+          vendeg_id: string
+          vendeg_last_name: string
+          vendeg_telefon: string
+          vendeg_uuid?: string
+        }
+        Update: {
+          created_at?: string
+          membership_end?: string | null
+          membership_start?: string | null
+          payment_date?: string | null
+          payment_status?: boolean
+          updated_at?: string
+          vendeg_birthday?: string
+          vendeg_email?: string
+          vendeg_first_name?: string
+          vendeg_id?: string
+          vendeg_last_name?: string
+          vendeg_telefon?: string
+          vendeg_uuid?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
