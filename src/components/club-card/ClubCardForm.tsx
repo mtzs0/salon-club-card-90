@@ -3,6 +3,8 @@ import { StepIndicator } from "./StepIndicator";
 import { Step1PersonalData, PersonalDataForm } from "./Step1PersonalData";
 import { Step2Payment } from "./Step2Payment";
 import { Step3Summary } from "./Step3Summary";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const FORM_STEPS = [
   { number: 1, label: "Adatok" },
@@ -29,6 +31,7 @@ export const ClubCardForm = () => {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [vendegUuid, setVendegUuid] = useState<string>("");
   const [vendegId, setVendegId] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<PersonalDataForm>({
     firstName: "",
@@ -55,7 +58,7 @@ export const ClubCardForm = () => {
     setFormData(data);
   }, []);
 
-  const handleStep1Complete = useCallback((overrideData?: PersonalDataForm) => {
+  const handleStep1Complete = useCallback(async (overrideData?: PersonalDataForm) => {
     const dataToUse = overrideData || formData;
     
     // Generate UUID and vendeg_id
@@ -69,43 +72,86 @@ export const ClubCardForm = () => {
       setFormData(overrideData);
     }
 
-    // Mark step 1 as completed and move to step 2
-    setCompletedSteps((prev) => [...prev.filter((s) => s !== 1), 1]);
-    setCurrentStep(2);
+    setIsSubmitting(true);
 
-    // TODO: Send data to Supabase here
-    console.log("Data to send to Supabase:", {
-      vendeg_uuid: uuid,
-      vendeg_id: id,
-      vendeg_first_name: dataToUse.firstName,
-      vendeg_last_name: dataToUse.lastName,
-      vendeg_birthday: `${dataToUse.birthYear}-${dataToUse.birthMonth}-${dataToUse.birthDay.padStart(2, "0")}`,
-      vendeg_email: dataToUse.email,
-      vendeg_telefon: dataToUse.phone,
-      payment_status: false,
-    });
+    try {
+      // Insert data into Supabase
+      const { error } = await supabase
+        .from("clients")
+        .insert({
+          vendeg_uuid: uuid,
+          vendeg_id: id,
+          vendeg_first_name: dataToUse.firstName,
+          vendeg_last_name: dataToUse.lastName,
+          vendeg_birthday: `${dataToUse.birthYear}-${dataToUse.birthMonth}-${dataToUse.birthDay.padStart(2, "0")}`,
+          vendeg_email: dataToUse.email,
+          vendeg_telefon: dataToUse.phone,
+          payment_status: false,
+        });
+
+      if (error) {
+        console.error("Supabase insert error:", error);
+        toast.error("Hiba történt az adatok mentése során. Kérjük, próbálja újra.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Mark step 1 as completed and move to step 2
+      setCompletedSteps((prev) => [...prev.filter((s) => s !== 1), 1]);
+      setCurrentStep(2);
+    } catch (error) {
+      console.error("Error saving data:", error);
+      toast.error("Hiba történt az adatok mentése során. Kérjük, próbálja újra.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }, [formData]);
 
-  const handlePaymentSuccess = useCallback(() => {
-    // Mark step 2 as completed and move to step 3
-    setCompletedSteps((prev) => [...prev.filter((s) => s !== 2), 2]);
-    setCurrentStep(3);
-
+  const handlePaymentSuccess = useCallback(async () => {
     const now = new Date();
     const paymentDate = now.toISOString();
     const membershipStart = now.toISOString().split("T")[0];
-    const membershipEnd = new Date(now.setFullYear(now.getFullYear() + 1))
+    const membershipEnd = new Date(new Date().setFullYear(new Date().getFullYear() + 1))
       .toISOString()
       .split("T")[0];
 
-    // TODO: Update Supabase with payment info
-    console.log("Payment data to update in Supabase:", {
-      vendeg_uuid: vendegUuid,
-      payment_date: paymentDate,
-      payment_status: true,
-      membership_start: membershipStart,
-      membership_end: membershipEnd,
-    });
+    try {
+      // First, check if membership_start already exists
+      const { data: existingData } = await supabase
+        .from("clients")
+        .select("membership_start")
+        .eq("vendeg_uuid", vendegUuid)
+        .maybeSingle();
+
+      const updateData: Record<string, unknown> = {
+        payment_date: paymentDate,
+        payment_status: true,
+        membership_end: membershipEnd,
+      };
+
+      // Only set membership_start if it doesn't already exist
+      if (!existingData?.membership_start) {
+        updateData.membership_start = membershipStart;
+      }
+
+      const { error } = await supabase
+        .from("clients")
+        .update(updateData)
+        .eq("vendeg_uuid", vendegUuid);
+
+      if (error) {
+        console.error("Supabase update error:", error);
+        toast.error("Hiba történt a fizetés mentése során.");
+        return;
+      }
+
+      // Mark step 2 as completed and move to step 3
+      setCompletedSteps((prev) => [...prev.filter((s) => s !== 2), 2]);
+      setCurrentStep(3);
+    } catch (error) {
+      console.error("Error updating payment:", error);
+      toast.error("Hiba történt a fizetés mentése során.");
+    }
   }, [vendegUuid]);
 
   const renderCurrentStep = () => {
