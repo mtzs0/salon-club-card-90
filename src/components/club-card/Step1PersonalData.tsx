@@ -175,23 +175,6 @@ export const Step1PersonalData = ({
         {/* Name Fields */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="firstName" className="text-sm font-medium">
-              Keresztnév
-            </Label>
-            <Input
-              id="firstName"
-              value={formData.firstName}
-              onChange={(e) =>
-                onFormChange({ ...formData, firstName: e.target.value })
-              }
-              className={errors.firstName ? "border-destructive" : ""}
-              placeholder=""
-            />
-            {errors.firstName && (
-              <p className="text-xs text-destructive">{errors.firstName}</p>
-            )}
-          </div>
-          <div className="space-y-1.5">
             <Label htmlFor="lastName" className="text-sm font-medium">
               Vezetéknév
             </Label>
@@ -206,6 +189,23 @@ export const Step1PersonalData = ({
             />
             {errors.lastName && (
               <p className="text-xs text-destructive">{errors.lastName}</p>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="firstName" className="text-sm font-medium">
+              Keresztnév
+            </Label>
+            <Input
+              id="firstName"
+              value={formData.firstName}
+              onChange={(e) =>
+                onFormChange({ ...formData, firstName: e.target.value })
+              }
+              className={errors.firstName ? "border-destructive" : ""}
+              placeholder=""
+            />
+            {errors.firstName && (
+              <p className="text-xs text-destructive">{errors.firstName}</p>
             )}
           </div>
         </div>
